@@ -4,16 +4,16 @@ Hono + GraphQL API server for the backpacking travel cost estimator.
 
 ## Tech Stack
 
-| Layer | Choice |
-|---|---|
-| Runtime | Node.js 20 |
-| HTTP Framework | Hono |
-| API | GraphQL (Apollo Server) |
-| ORM | Prisma |
-| Database | PostgreSQL 16 |
-| Cache | Redis 7 |
-| Queue | AWS SQS + Lambda |
-| Language | TypeScript |
+| Layer          | Choice                  |
+| -------------- | ----------------------- |
+| Runtime        | Node.js 20              |
+| HTTP Framework | Hono                    |
+| API            | GraphQL (Apollo Server) |
+| ORM            | Prisma                  |
+| Database       | PostgreSQL 16           |
+| Cache          | Redis 7                 |
+| Queue          | AWS SQS + Lambda        |
+| Language       | TypeScript              |
 
 ---
 
@@ -42,7 +42,8 @@ backend/
 │   ├── db/
 │   │   ├── prisma/
 │   │   │   ├── schema.prisma
-│   │   │   └── migrations/
+│   │   │   ├── migrations/
+|   |   |   └── seed.ts           # Seeds values for testing locally
 │   │   └── client.ts             # Singleton Prisma client
 │   ├── cache/
 │   │   └── redis.ts              # Redis client + cache helpers
@@ -81,30 +82,14 @@ pnpm --filter backend prisma migrate dev
 
 # Start dev server
 pnpm --filter backend dev
+
+# Seed data into Docker Postgres DB
+pnpm --dir backend exec prisma db seed
 ```
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` and fill in values:
-
-```bash
-cp .env.example .env
-```
-
-```env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/nomadcost
-REDIS_URL=redis://localhost:6379
-PORT=4000
-
-# External APIs (cost of living data)
-COL_API_KEY=
-
-# AWS (for job queue — can leave blank for local dev)
-AWS_REGION=us-east-1
-AWS_SQS_QUEUE_URL=
-```
-
----
+Refer to .env.example
 
 ## Architecture Notes
 
@@ -118,18 +103,18 @@ Business logic lives in `src/services/` and has no knowledge of GraphQL, Hono, o
 // Good
 const budgetResolver = {
   Query: {
-    estimateCost: (_, args, ctx) => budgetService.estimate(args, ctx.db)
-  }
-}
+    estimateCost: (_, args, ctx) => budgetService.estimate(args, ctx.db),
+  },
+};
 
 // Avoid — logic creeping into resolvers
 const budgetResolver = {
   Query: {
     estimateCost: (_, args, ctx) => {
       // 50 lines of calculation...
-    }
-  }
-}
+    },
+  },
+};
 ```
 
 ### Caching strategy
