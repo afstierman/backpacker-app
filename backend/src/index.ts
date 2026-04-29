@@ -1,12 +1,7 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { ApolloServer } from "@apollo/server";
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-
-const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
-});
+import { prisma } from "./db/client";
 
 const typeDefs = `#graphql
   type Destination {

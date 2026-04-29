@@ -78,7 +78,7 @@ pnpm install
 docker compose up -d
 
 # Run migrations
-pnpm --filter backend prisma migrate dev
+pnpm --dir backend exec prisma migrate dev
 
 # Start dev server
 pnpm --filter backend dev
