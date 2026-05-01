@@ -3,6 +3,10 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
+if (!MAPBOX_TOKEN || MAPBOX_TOKEN.trim() === '') {
+  throw new Error('Missing required environment variable: VITE_MAPBOX_TOKEN');
+}
+
 const MapView = () => {
   return (
     <div className="w-full h-full">
