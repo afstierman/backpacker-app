@@ -1,10 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../../generated/prisma"
 }
 
@@ -12,13 +7,182 @@ datasource db {
   provider = "postgresql"
 }
 
-model Destination {
-  id             String   @id @default(cuid())
-  city           String   @unique
-  country        String
-  dailyCostUSD   Float
-  lat            Float
-  lng            Float
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+// =============================================================================
+// GEOGRAPHIC HIERARCHY
+// Three fixed tiers: Region → Country → City
+// Each level can have CostSnapshots attached independently.
+// =============================================================================
+
+model Region {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  heroImageUrl String?
+  lat         Float
+  lng         Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  countries   Country[]
+  tags        RegionTag[]
+
+  @@index([slug])
+  @@map("regions")
+}
+
+model Country {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  regionId    String
+  description String?
+  heroImageUrl String?
+  lat         Float
+  lng         Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  region        Region         @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  cities        City[]
+  costSnapshots CostSnapshot[]
+  tags          CountryTag[]
+
+  @@index([slug])
+  @@index([regionId])
+  @@map("countries")
+}
+
+model City {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  countryId    String
+  description  String?
+  heroImageUrl String?
+  lat          Float
+  lng          Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  country       Country        @relation(fields: [countryId], references: [id], onDelete: Restrict)
+  costSnapshots CostSnapshot[]
+  tags          CityTag[]
+
+  @@index([slug])
+  @@index([countryId])
+  @@map("cities")
+}
+
+// =============================================================================
+// COST DATA
+// Append-only snapshots — never update in place.
+// Service layer always queries the most recent snapshot per location.
+// Exactly one of cityId / countryId must be non-null (enforced in service layer).
+// =============================================================================
+
+model CostSnapshot {
+  id                  String         @id @default(uuid())
+  cityId              String?
+  countryId           String?
+
+  // Daily costs in whole USD (budget-tier: hostel, street food, local transit)
+  accommodationUsdDay Int
+  foodUsdDay          Int
+  transportUsdDay     Int
+  activitiesUsdDay    Int
+
+  // One-time costs
+  visaUsd             Int?           // null = unknown, 0 = visa-free
+
+  // Metadata
+  currencyLocal       String         // ISO 4217, e.g. "THB", "EUR"
+  source              SnapshotSource
+  snapshottedAt       DateTime       @default(now())
+
+  city    City?    @relation(fields: [cityId],    references: [id], onDelete: Cascade)
+  country Country? @relation(fields: [countryId], references: [id], onDelete: Cascade)
+
+  // Composite indexes — always query most-recent snapshot for a given location
+  @@index([cityId,    snapshottedAt(sort: Desc)])
+  @@index([countryId, snapshottedAt(sort: Desc)])
+  @@map("cost_snapshots")
+}
+
+// =============================================================================
+// TAGS
+// Separate junction tables per geographic tier.
+// This avoids a polymorphic relation and keeps FK constraints clean.
+// =============================================================================
+
+model Tag {
+  id       String      @id @default(uuid())
+  slug     String      @unique  // e.g. "budget-backpacker", "beach", "digital-nomad"
+  label    String               // e.g. "Budget Backpacker", "Beach", "Digital Nomad"
+  category TagCategory
+
+  regions   RegionTag[]
+  countries CountryTag[]
+  cities    CityTag[]
+
+  @@index([category])
+  @@map("tags")
+}
+
+model RegionTag {
+  regionId String
+  tagId    String
+
+  region Region @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId],    references: [id], onDelete: Cascade)
+
+  @@id([regionId, tagId])
+  @@map("region_tags")
+}
+
+model CountryTag {
+  countryId String
+  tagId     String
+
+  country Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId],     references: [id], onDelete: Cascade)
+
+  @@id([countryId, tagId])
+  @@map("country_tags")
+}
+
+model CityTag {
+  cityId String
+  tagId  String
+
+  city City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId],  references: [id], onDelete: Cascade)
+
+  @@id([cityId, tagId])
+  @@map("city_tags")
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+enum ClimateType {
+  TROPICAL
+  ARID
+  TEMPERATE
+  CONTINENTAL
+  POLAR
+}
+
+enum TagCategory {
+  BUDGET    // e.g. budget-backpacker, mid-range, flashpacker
+  VIBE      // e.g. party, chill, romantic, adventurous
+  ACTIVITY  // e.g. beach, hiking, diving, city-break, digital-nomad
+  CLIMATE   // e.g. tropical, dry, cold — complements the Country/City climateType
+}
+
+enum SnapshotSource {
+  NUMBEO      // Pulled from Numbeo cost-of-living data
+  MANUAL      // Hand-entered by admin
+  PRICE_SYNC  // Ingested via the priceSync Lambda job
 }

@@ -1,12 +1,15 @@
-type Destination {
-  id: String
-  city: String
-  country: String
-  dailyCostUSD: Float
-  lat: Float
-  lng: Float
+type CityDestination {
+  id: String!
+  name: String!
+  city: String!
+  country: String!
+  region: String!
+  dailyCostUSD: Float!
+  lat: Float!
+  lng: Float!
 }
 
 type Query {
-  destinations: [Destination]
+  destinations: [CityDestination!]!
+  cities: [CityDestination!]!
 }

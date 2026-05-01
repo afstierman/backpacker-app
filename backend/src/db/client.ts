@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { PrismaClient } from "../generated/prisma/client";
+import { PrismaClient } from "../generated/prisma/index.js";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 function getRequiredEnv(name: string): string {
