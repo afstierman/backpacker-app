@@ -36,8 +36,11 @@ pnpm install
 # Start Postgres + Redis
 docker compose up -d
 
+# Generate Prisma files
+pnpm --filter backend exec prisma generate dev
+
 # Run DB migrations
-pnpm --filter backend prisma migrate dev
+pnpm --filter backend exec prisma migrate dev
 
 # Start all packages in dev mode
 pnpm dev
