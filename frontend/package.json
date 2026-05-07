@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "codegen": "graphql-codegen",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -12,6 +13,7 @@
   },
   "dependencies": {
     "@apollo/client": "^4.1.9",
+    "@graphql-typed-document-node/core": "^3.2.0",
     "@tailwindcss/vite": "^4.2.2",
     "graphql": "^16.13.2",
     "mapbox-gl": "^3.21.0",
@@ -22,6 +24,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@graphql-codegen/cli": "^7.0.0",
+    "@graphql-codegen/client-preset": "^6.0.0",
     "@types/mapbox-gl": "^3.4.1",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
