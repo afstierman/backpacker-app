@@ -19,13 +19,29 @@ const regions = [
     slug: "southeast-asia",
     name: "Southeast Asia",
     lat: 12.5,
-    lng: 104.0,
+    lng: 104,
+    cost: {
+      accommodation: 15,
+      food: 14,
+      transport: 7,
+      activities: 6,
+      visa: 0,
+      currency: "USD",
+    },
     countries: [
       {
         slug: "thailand",
         name: "Thailand",
         lat: 15.87,
         lng: 100.99,
+        cost: {
+          accommodation: 14,
+          food: 14,
+          transport: 6,
+          activities: 6,
+          visa: 0,
+          currency: "THB",
+        },
         cities: [
           {
             slug: "bangkok",
@@ -62,6 +78,14 @@ const regions = [
         name: "Vietnam",
         lat: 14.06,
         lng: 108.28,
+        cost: {
+          accommodation: 11,
+          food: 13,
+          transport: 5,
+          activities: 5,
+          visa: 25,
+          currency: "VND",
+        },
         cities: [
           {
             slug: "ho-chi-minh-city",
@@ -83,7 +107,15 @@ const regions = [
         slug: "indonesia",
         name: "Indonesia",
         lat: -2.55,
-        lng: 118.0,
+        lng: 118,
+        cost: {
+          accommodation: 13,
+          food: 13,
+          transport: 6,
+          activities: 5,
+          visa: 0,
+          currency: "IDR",
+        },
         cities: [
           {
             slug: "bali",
@@ -106,14 +138,30 @@ const regions = [
   {
     slug: "eastern-europe",
     name: "Eastern Europe",
-    lat: 50.0,
-    lng: 20.0,
+    lat: 50,
+    lng: 20,
+    cost: {
+      accommodation: 24,
+      food: 20,
+      transport: 10,
+      activities: 13,
+      visa: 0,
+      currency: "USD",
+    },
     countries: [
       {
         slug: "czech-republic",
         name: "Czech Republic",
         lat: 49.82,
         lng: 15.47,
+        cost: {
+          accommodation: 24,
+          food: 19,
+          transport: 9,
+          activities: 13,
+          visa: 0,
+          currency: "CZK",
+        },
         cities: [
           {
             slug: "prague",
@@ -136,6 +184,14 @@ const regions = [
         name: "Hungary",
         lat: 47.16,
         lng: 19.5,
+        cost: {
+          accommodation: 21,
+          food: 18,
+          transport: 9,
+          activities: 12,
+          visa: 0,
+          currency: "HUF",
+        },
         cities: [
           {
             slug: "budapest",
@@ -158,6 +214,14 @@ const regions = [
         name: "Georgia",
         lat: 42.32,
         lng: 43.36,
+        cost: {
+          accommodation: 13,
+          food: 11,
+          transport: 5,
+          activities: 5,
+          visa: 0,
+          currency: "GEL",
+        },
         cities: [
           {
             slug: "tbilisi",
@@ -180,14 +244,30 @@ const regions = [
   {
     slug: "western-europe",
     name: "Western Europe",
-    lat: 48.0,
-    lng: 5.0,
+    lat: 48,
+    lng: 5,
+    cost: {
+      accommodation: 32,
+      food: 26,
+      transport: 10,
+      activities: 21,
+      visa: 0,
+      currency: "USD",
+    },
     countries: [
       {
         slug: "portugal",
         name: "Portugal",
         lat: 39.4,
         lng: -8.22,
+        cost: {
+          accommodation: 28,
+          food: 24,
+          transport: 9,
+          activities: 18,
+          visa: 0,
+          currency: "EUR",
+        },
         cities: [
           {
             slug: "lisbon",
@@ -210,14 +290,30 @@ const regions = [
   {
     slug: "latin-america",
     name: "Latin America",
-    lat: 4.0,
-    lng: -72.0,
+    lat: 4,
+    lng: -72,
+    cost: {
+      accommodation: 16,
+      food: 15,
+      transport: 7,
+      activities: 8,
+      visa: 0,
+      currency: "USD",
+    },
     countries: [
       {
         slug: "colombia",
         name: "Colombia",
         lat: 4.57,
         lng: -74.3,
+        cost: {
+          accommodation: 13,
+          food: 13,
+          transport: 6,
+          activities: 6,
+          visa: 0,
+          currency: "COP",
+        },
         cities: [
           {
             slug: "medellin",
@@ -240,6 +336,14 @@ const regions = [
         name: "Mexico",
         lat: 23.63,
         lng: -102.55,
+        cost: {
+          accommodation: 17,
+          food: 17,
+          transport: 7,
+          activities: 10,
+          visa: 0,
+          currency: "MXN",
+        },
         cities: [
           {
             slug: "mexico-city",
@@ -282,6 +386,19 @@ async function main() {
     });
     console.log(`  Region: ${region.name}`);
 
+    await prisma.costSnapshot.create({
+      data: {
+        regionId: region.id,
+        accommodationUsdDay: regionData.cost.accommodation,
+        foodUsdDay: regionData.cost.food,
+        transportUsdDay: regionData.cost.transport,
+        activitiesUsdDay: regionData.cost.activities,
+        visaUsd: regionData.cost.visa,
+        currencyLocal: regionData.cost.currency,
+        source: "MANUAL",
+      },
+    });
+
     for (const countryData of regionData.countries) {
       const country = await prisma.country.upsert({
         where: { slug: countryData.slug },
@@ -295,6 +412,19 @@ async function main() {
         },
       });
       console.log(`    Country: ${country.name}`);
+
+      await prisma.costSnapshot.create({
+        data: {
+          countryId: country.id,
+          accommodationUsdDay: countryData.cost.accommodation,
+          foodUsdDay: countryData.cost.food,
+          transportUsdDay: countryData.cost.transport,
+          activitiesUsdDay: countryData.cost.activities,
+          visaUsd: countryData.cost.visa,
+          currencyLocal: countryData.cost.currency,
+          source: "MANUAL",
+        },
+      });
 
       for (const cityData of countryData.cities) {
         const city = await prisma.city.upsert({

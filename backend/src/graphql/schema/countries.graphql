@@ -1,0 +1,12 @@
+type CountryDestination {
+  id: String!
+  name: String!
+  region: String!
+  dailyCostUSD: Float!
+  lat: Float!
+  lng: Float!
+}
+
+type Query {
+  countries: [CountryDestination!]!
+}

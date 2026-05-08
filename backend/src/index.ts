@@ -1,7 +1,9 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { ApolloServer } from "@apollo/server";
-import { destinationResolvers } from "./graphql/resolvers/destination.resolver";
+import { cityResolvers } from "./graphql/resolvers/cities.resolver";
+import { countryResolvers } from "./graphql/resolvers/countries.resolver";
+import { regionResolvers } from "./graphql/resolvers/regions.resolver";
 import { createContext } from "./graphql/context";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -25,10 +27,34 @@ function getPort(): number {
   return port;
 }
 
-const typeDefs = readFileSync(
-  join(__dirname, "./graphql/schema/destination.graphql"),
-  "utf-8",
+const schemaFiles = ["cities.graphql", "countries.graphql", "regions.graphql"];
+
+const typeDefs = schemaFiles.map((schemaFile) =>
+  readFileSync(join(__dirname, "./graphql/schema", schemaFile), "utf-8"),
 );
+
+const resolvers = {
+  Query: {
+    ...cityResolvers.Query,
+    ...countryResolvers.Query,
+    ...regionResolvers.Query,
+  },
+};
+
+function renderGraphqlSandbox(endpoint: string): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <body style="margin:0">
+        <div id="sandbox" style="position:fixed;height:100%;width:100%"></div>
+        <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js"></script>
+        <script>
+          new window.EmbeddedSandbox({ target: '#sandbox', initialEndpoint: '${endpoint}' })
+        </script>
+      </body>
+    </html>
+  `;
+}
 
 async function startServer() {
   const port = getPort();
@@ -36,7 +62,7 @@ async function startServer() {
 
   const apollo = new ApolloServer({
     typeDefs,
-    resolvers: destinationResolvers,
+    resolvers,
   });
 
   await apollo.start();
@@ -68,20 +94,7 @@ async function startServer() {
     }
 
     const origin = new URL(c.req.url).origin;
-    const graphqlEndpoint = `${origin}/graphql`;
-
-    return c.html(`
-      <!DOCTYPE html>
-      <html>
-        <body style="margin:0">
-          <div id="sandbox" style="position:fixed;height:100%;width:100%"></div>
-          <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js"></script>
-          <script>
-            new window.EmbeddedSandbox({ target: '#sandbox', initialEndpoint: '${graphqlEndpoint}' })
-          </script>
-        </body>
-      </html>
-    `);
+    return c.html(renderGraphqlSandbox(`${origin}/graphql`));
   });
 
   serve({ fetch: app.fetch, port }, () => {
