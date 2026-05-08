@@ -4,6 +4,7 @@ type RegionDestination {
   dailyCostUSD: Float!
   lat: Float!
   lng: Float!
+  minZoom: Int!
 }
 
 type Query {

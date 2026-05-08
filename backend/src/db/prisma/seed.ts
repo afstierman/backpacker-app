@@ -382,6 +382,7 @@ async function main() {
         slug: regionData.slug,
         lat: regionData.lat,
         lng: regionData.lng,
+        minZoom: regionData.countries.length > 5 ? 4 : 6, // Looser clustering for regions with many countries
       },
     });
     console.log(`  Region: ${region.name}`);
@@ -409,6 +410,7 @@ async function main() {
           regionId: region.id,
           lat: countryData.lat,
           lng: countryData.lng,
+          minZoom: countryData.cities.length > 5 ? 4 : 6, // Looser clustering for countries with many cities
         },
       });
       console.log(`    Country: ${country.name}`);
@@ -436,6 +438,7 @@ async function main() {
             countryId: country.id,
             lat: cityData.lat,
             lng: cityData.lng,
+            minZoom: 10, // Default clustering for cities
           },
         });
 

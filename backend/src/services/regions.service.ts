@@ -36,6 +36,7 @@ export async function getRegionDestinations() {
           (snapshot.visaUsd ?? 0),
         lat: region.lat,
         lng: region.lng,
+        minZoom: region.minZoom,
       };
     })
     .filter(
