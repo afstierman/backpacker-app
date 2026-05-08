@@ -1,7 +1,6 @@
 type CityDestination {
   id: String!
   name: String!
-  city: String!
   country: String!
   region: String!
   dailyCostUSD: Float!
@@ -10,6 +9,5 @@ type CityDestination {
 }
 
 type Query {
-  destinations: [CityDestination!]!
   cities: [CityDestination!]!
 }

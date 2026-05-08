@@ -1,19 +1,6 @@
-import { prisma } from "../../db/client";
+import { prisma } from "../db/client";
 
-export const destinationResolvers = {
-  Query: {
-    destinations: async () => {
-      return getCityDestinations();
-    },
-    cities: async () => {
-      return getCityDestinations();
-    },
-  },
-};
-
-// Will thin out, move logic to service layer
-
-async function getCityDestinations() {
+export async function getCityDestinations() {
   const cities = await prisma.city.findMany({
     include: {
       country: {
@@ -41,7 +28,6 @@ async function getCityDestinations() {
       return {
         id: city.id,
         name: city.name,
-        city: city.name,
         country: city.country.name,
         region: city.country.region.name,
         dailyCostUSD:
