@@ -38,6 +38,7 @@ export async function getCityDestinations() {
           (snapshot.visaUsd ?? 0),
         lat: city.lat,
         lng: city.lng,
+        minZoom: city.minZoom,
       };
     })
     .filter(
