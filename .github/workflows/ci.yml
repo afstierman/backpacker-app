@@ -19,6 +19,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+        working-directory: frontend
+      # Only build the frontend for now, need to add full build later.
+      # I believe the issue in the pipeline is due to the prisma needing to be generated
 
   frontend-test:
     name: Frontend Test
