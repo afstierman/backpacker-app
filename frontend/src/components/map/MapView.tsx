@@ -1,33 +1,37 @@
-import Map, { NavigationControl, FullscreenControl } from 'react-map-gl/mapbox';
-import 'mapbox-gl/dist/mapbox-gl.css';
-
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
-
-if (!MAPBOX_TOKEN || MAPBOX_TOKEN.trim() === '') {
-  throw new Error('Missing required environment variable: VITE_MAPBOX_TOKEN');
-}
+import { useEffect, useRef } from "react";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 const MapView = () => {
-  return (
-    <div className="w-full h-full">
-      <Map
-        //Initial view set to US
-        initialViewState={{
-          longitude: -95,
-          latitude: 40,
-          zoom: 3
-        }}
-        mapStyle="mapbox://styles/mapbox/outdoors-v12" 
-        mapboxAccessToken={MAPBOX_TOKEN}
-        // This ensures the map fills its parent container
-        style={{ width: '100%', height: '100%' }}
-      >
-        {/* Adds zoom/rotate buttons */}
-        <NavigationControl position="top-right" />
-        <FullscreenControl position="top-right" />
-      </Map>
-    </div>
-  );
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<maplibregl.Map | null>(null);
+
+  useEffect(() => {
+    if (!mapContainer.current || map.current) return;
+
+    map.current = new maplibregl.Map({
+      container: mapContainer.current,
+      style: import.meta.env.VITE_MAP_STYLE_URL,
+      center: [20, 20],
+      zoom: 2,
+    });
+
+    // Add zoom/rotate controls
+    map.current.addControl(new maplibregl.NavigationControl(), "top-right");
+    map.current.addControl(new maplibregl.FullscreenControl(), "top-right");
+
+    //Make into globe
+    map.current.on("style.load", () => {
+      map.current?.setProjection({ type: "globe" });
+    });
+
+    return () => {
+      map.current?.remove();
+      map.current = null;
+    };
+  }, []);
+
+  return <div ref={mapContainer} className="w-full h-full" />;
 };
 
 export default MapView;
